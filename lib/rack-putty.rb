@@ -2,6 +2,7 @@ require "rack-putty/version"
 
 module Rack
   module Putty
-    # Your code goes here...
+    autoload :Router, 'rack-putty/router'
+    autoload :Middleware, 'rack-putty/middleware'
   end
 end
