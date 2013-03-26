@@ -29,6 +29,7 @@ module Rack
 
       def self.included(base)
         base.extend(ClassMethods)
+        base.routes.rehash
       end
 
       def call(env)
