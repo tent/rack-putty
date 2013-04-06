@@ -91,13 +91,13 @@ module Rack
           end
 
           builder = Rack::Builder.new(@stack_base)
+          builder.use(ExtractParams, path, params)
 
           (@middleware || []).each do |i|
             klass, args = i
             builder.use(klass, *args)
           end
 
-          builder.use(ExtractParams, path, params)
           block.call(builder)
 
           routes.add_route(builder.to_app, :request_method => verb, :path_info => path)
