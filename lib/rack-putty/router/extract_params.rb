@@ -30,6 +30,11 @@ module Rack
 
           params = env['request'].params.dup
 
+          if env['CONTENT_TYPE'] =~ /\Amultipart/
+            env['data'] = params.select { |k,v| Hash === v && v.has_key?(:filename) }
+            params = params.reject { |k,v| Hash === v && v.has_key?(:filename) }
+          end
+
           if values.any?
             params.merge!('captures' => values)
             keys.zip(values) { |k,v| Array === params[k] ? params[k] << v : params[k] = v if v }
