@@ -139,6 +139,17 @@ module Rack
             raise TypeError, path
           end
         end
+
+        def encoded(char)
+          enc = URI.escape(char)
+          enc = "(?:#{escaped(char, enc).join('|')})" if enc == char
+          enc = "(?:#{enc}|#{encoded('+')})" if char == " "
+          enc
+        end
+
+        def escaped(char, enc = URI.escape(char))
+          [Regexp.escape(enc), URI.escape(char, /./)]
+        end
       end
     end
 
