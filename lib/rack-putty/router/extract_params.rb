@@ -12,6 +12,7 @@ module Rack
 
         def call(env)
           add_request(env)
+          add_path_info(env)
           extract_params(env)
           @app.call(env)
         end
@@ -20,6 +21,10 @@ module Rack
 
         def add_request(env)
           env['request'] = Rack::Request.new(env)
+        end
+
+        def add_path_info(env)
+          env['PATH_INFO'] = env['REQUEST_PATH'] if env['PATH_INFO'].to_s == ""
         end
 
         def extract_params(env)
