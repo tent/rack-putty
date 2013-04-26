@@ -25,7 +25,7 @@ module Rack
     module Router
       MissingStackBaseError = Class.new(StandardError)
 
-      autoload :ExtractParams, 'rack-putty/router/extract_params'
+      require 'rack-putty/router/extract_params'
 
       def self.included(base)
         base.extend(ClassMethods)
