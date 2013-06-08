@@ -1,3 +1,5 @@
+require 'cgi'
+
 module Rack
   module Putty
 
@@ -33,12 +35,11 @@ module Rack
           return unless match = pattern.match(route)
           values = match.captures.to_a.map { |v| URI.decode_www_form_component(v) if v }
 
-          params = env['request'].params.dup
-
           if env['CONTENT_TYPE'] =~ /\Amultipart/
-            env['data'] = params.select { |k,v| Hash === v && v.has_key?(:filename) }
-            params = params.reject { |k,v| Hash === v && v.has_key?(:filename) }
+            env['data'] = env['request'].params.dup.select { |k,v| Hash === v && v.has_key?(:filename) }
           end
+
+          params = parse_params(env['QUERY_STRING'])
 
           if values.any?
             params.merge!('captures' => values)
@@ -47,6 +48,24 @@ module Rack
 
           env['params'] = indifferent_params(params)
         end
+
+        def parse_params(query_string)
+          query_string.to_s.split('&').inject(Hash.new) do |memo, param|
+            key,val = param.split('=')
+            val = unescape(val)
+
+            if memo.has_key?(key)
+              memo[key] = [memo[key]] unless Array === memo[key]
+              memo[key] << val
+            else
+              memo[key] = val
+            end
+
+            memo
+          end
+        end
+
+        def unescape(s) CGI.unescape s.to_s end
 
         # Enable string or symbol key access to the nested params hash.
         def indifferent_params(object)
