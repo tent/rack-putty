@@ -33,7 +33,14 @@ module Rack
       end
 
       def call(env)
-        self.class.routes.call(env)
+        status, headers, body = self.class.routes.call(env)
+
+        if body.empty?
+          # workaround bug in puma, think, webrick, etc.
+          headers['Content-Length'] = '0'
+        end
+
+        [status, headers, body]
       end
 
       module ClassMethods
