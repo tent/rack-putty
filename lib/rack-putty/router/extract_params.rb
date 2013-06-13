@@ -39,7 +39,7 @@ module Rack
             env['data'] = env['request'].params.dup.select { |k,v| Hash === v && v.has_key?(:filename) }
           end
 
-          params = parse_params(env['QUERY_STRING'])
+          params = parse_params(env['REQUEST_URI'].split('?')[1].to_s)
 
           if values.any?
             params.merge!('captures' => values)
