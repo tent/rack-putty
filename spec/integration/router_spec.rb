@@ -96,13 +96,23 @@ describe Rack::Putty::Router do
   end
 
   def app
-    TestApp.new
+    _app = TestApp.new
+    proc do |env|
+      env['REQUEST_URI'] = [env['PATH_INFO'], env['QUERY_STRING']].join('?')
+      _app.call(env)
+    end
   end
 
   let(:env) { {} }
 
   context "as a mounted app with a prefix" do
-    let(:app) { PrefixMountedApp.new(TestApp.new) }
+    let(:app) do
+      _app = TestApp.new
+      PrefixMountedApp.new(proc { |env|
+        env['REQUEST_URI'] = [env['PATH_INFO'], env['QUERY_STRING']].join('?')
+        _app.call(env)
+      })
+    end
 
     it "still matches the path name" do
       get '/prefix/foo/baz', {}, env
