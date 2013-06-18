@@ -35,8 +35,9 @@ module Rack
       def call(env)
         status, headers, body = self.class.routes.call(env)
 
-        if body.respond_to?(:empty?) && body.empty?
-          # workaround bug in puma, think, webrick, etc.
+        if env["REQUEST_METHOD"] == "HEAD" || (body.respond_to?(:empty?) && body.empty?)
+          body.close if body.respond_to?(:close)
+          body = []
           headers['Content-Length'] = '0'
         end
 
