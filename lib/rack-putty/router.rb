@@ -33,15 +33,7 @@ module Rack
       end
 
       def call(env)
-        status, headers, body = self.class.routes.call(env)
-
-        if env["REQUEST_METHOD"] == "HEAD" || (body.respond_to?(:empty?) && body.empty?)
-          body.close if body.respond_to?(:close)
-          body = []
-          headers['Content-Length'] = '0'
-        end
-
-        [status, headers, body]
+        self.class.routes.call(env)
       end
 
       module ClassMethods
@@ -98,7 +90,17 @@ module Rack
             raise MissingStackBaseError.new("You need to call `stack_base` with a base app class to be passed to Rack::Builder.new.")
           end
 
+          # Remove ContentLength and Chunked middlewares from default stack so we can put HEAD before them...
+          Rack::Server.middleware['development'] = [[Rack::ShowExceptions], [Rack::Lint], Rack::Server.logging_middleware]
+          Rack::Server.middleware['deployment'] = [Rack::Server.logging_middleware]
+
           builder = Rack::Builder.new(@stack_base)
+
+          # ...and here it is
+          builder.use(Rack::Head)
+          builder.use(Rack::Chunked)
+          builder.use(Rack::ContentLength)
+
           builder.use(ExtractParams, path, params)
 
           (@middleware || []).each do |i|
